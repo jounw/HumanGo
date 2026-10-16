@@ -1,0 +1,62 @@
+[
+  {
+    "id": "basic",
+    "name": "기본",
+    "file": "/bodies/basic.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "suit",
+    "name": "정장",
+    "file": "/bodies/suit.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "sport",
+    "name": "운동복",
+    "file": "/bodies/sport.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "hero",
+    "name": "히어로",
+    "file": "/bodies/hero.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "chef",
+    "name": "요리사",
+    "file": "/bodies/chef.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "pajama",
+    "name": "잠옷",
+    "file": "/bodies/pajama.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  }
+]

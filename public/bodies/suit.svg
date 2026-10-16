@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none" stroke-linejoin="round" stroke-linecap="round">
+  <g stroke="#2b2140" stroke-width="5">
+    <rect x="222" y="418" width="30" height="56" rx="12" fill="#27304f"/>
+    <rect x="260" y="418" width="30" height="56" rx="12" fill="#27304f"/>
+    <ellipse cx="233" cy="482" rx="26" ry="14" fill="#15121f"/>
+    <ellipse cx="279" cy="482" rx="26" ry="14" fill="#15121f"/>
+    <rect x="164" y="338" width="36" height="72" rx="18" fill="#27304f" transform="rotate(8 182 338)"/>
+    <rect x="312" y="338" width="36" height="72" rx="18" fill="#27304f" transform="rotate(-8 330 338)"/>
+    <circle cx="176" cy="414" r="15" fill="#f2c9a0"/>
+    <circle cx="336" cy="414" r="15" fill="#f2c9a0"/>
+  </g>
+  <g stroke="#2b2140" stroke-width="5">
+    <rect x="196" y="326" width="120" height="104" rx="30" fill="#27304f"/>
+    <path d="M236 328 L256 380 L276 328 Z" fill="#ffffff"/><path d="M256 340 l-8 14 l8 34 l8 -34 z" fill="#e2495b" stroke="#2b2140" stroke-width="4"/><path d="M236 328 L222 372 M276 328 L290 372" stroke="#3d4975" stroke-width="5"/>
+  </g></svg>

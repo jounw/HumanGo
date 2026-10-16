@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="body" cx="36%" cy="30%" r="80%">
+      <stop offset="0" stop-color="#8b7bff"/>
+      <stop offset="0.55" stop-color="#4338ca"/>
+      <stop offset="1" stop-color="#1e1b4b"/>
+    </radialGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="0.5" stop-color="#99f6e4"/>
+      <stop offset="1" stop-color="#2dd4bf"/>
+    </radialGradient>
+    <clipPath id="orb"><circle cx="100" cy="100" r="92"/></clipPath>
+  </defs>
+  <circle cx="100" cy="100" r="96" fill="#0b1020"/>
+  <circle cx="100" cy="100" r="92" fill="url(#body)"/>
+  <g clip-path="url(#orb)">
+    <path d="M0 78 H200 V122 H0 Z" fill="#0b1020" opacity="0.55"/>
+    <path d="M0 84 H200 M0 116 H200" stroke="#5eead4" stroke-width="3" opacity="0.9"/>
+  </g>
+  <circle cx="100" cy="100" r="30" fill="#0b1020"/>
+  <circle cx="100" cy="100" r="24" fill="url(#core)"/>
+  <path d="M100 82 L108 100 L100 118 L92 100 Z" fill="#4338ca" opacity="0.85"/>
+  <ellipse cx="70" cy="52" rx="26" ry="14" fill="#fff" opacity="0.28" transform="rotate(-32 70 52)"/>
+</svg>

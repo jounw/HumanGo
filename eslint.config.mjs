@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // 복사된 외부 번들 (MediaPipe wasm, OpenCV.js)
+    "public/**",
   ]),
 ]);
 

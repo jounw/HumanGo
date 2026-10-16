@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# mediapipe wasm (postinstall 로 복사됨)
+/public/models/wasm
+/public/opencv
+/public/dev-test
