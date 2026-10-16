@@ -13,6 +13,7 @@ export type DemoRecord = {
   capturedAt: string;
   bodyId: string;
   character: Blob;
+  face?: Blob; // 3D 보기용 (이전 데모 기록에는 없음)
   scene: Blob;
   cutout: Blob;
 };

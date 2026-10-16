@@ -120,8 +120,9 @@ export async function demoRegister(input: RegisterInput): Promise<string> {
     throw new Error(`이름은 1~${CAPTURE_NAME_MAX}자로 입력해 주세요.`);
   }
   const id = crypto.randomUUID();
-  const [character, scene, cutout] = await Promise.all([
+  const [character, face, scene, cutout] = await Promise.all([
     canvasToBlob(input.character, "image/png"),
+    canvasToBlob(input.face, "image/png"),
     canvasToBlob(
       scaleToMaxWidth(input.scene, SCENE_MAX_WIDTH),
       "image/jpeg",
@@ -136,6 +137,7 @@ export async function demoRegister(input: RegisterInput): Promise<string> {
     capturedAt: new Date().toISOString(),
     bodyId: input.bodyId,
     character,
+    face,
     scene,
     cutout,
   });
