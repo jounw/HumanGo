@@ -147,8 +147,6 @@ export function DemoDexDetail({ id }: { id: string }) {
           isMine
           capturedAt={new Date(rec.capturedAt).toLocaleString("ko-KR")}
           characterUrl={URL.createObjectURL(rec.character)}
-          faceUrl={rec.face ? URL.createObjectURL(rec.face) : null}
-          bodyId={rec.bodyId}
           sceneUrl={URL.createObjectURL(rec.scene)}
           cutoutUrl={URL.createObjectURL(rec.cutout)}
           paths={[]}

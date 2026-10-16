@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import Chibi3D from "@/components/Chibi3D";
 import { BODIES, composeChibi } from "@/lib/game/chibi";
 import { RARITY_LABEL, RARITY_STYLE, rollRarity } from "@/lib/game/rarity";
 import { getCaptureSession, setCaptureSession } from "@/lib/game/session";
@@ -26,7 +25,6 @@ export default function ResultClient() {
   const [face, setFace] = useState<HTMLCanvasElement | null>(null);
   const [faceFound, setFaceFound] = useState(true);
   const [faceError, setFaceError] = useState(false);
-  const [view3d, setView3d] = useState(true);
   const [bodyIdx, setBodyIdx] = useState(0);
   const [character, setCharacter] = useState<HTMLCanvasElement | null>(null);
   const [rarity] = useState(() => rollRarity());
@@ -132,8 +130,7 @@ export default function ResultClient() {
       <section
         aria-label="캐릭터 미리보기"
         className={`relative mx-auto w-full max-w-xs touch-pan-y rounded-3xl bg-white/5 p-4 ${style.ring} ${style.glow}`}
-        // 2D 일 때만 좌우 스와이프로 몸통 변경 (3D 에서는 드래그가 회전)
-        onPointerDown={(e) => (swipeStart.current = view3d ? null : e.clientX)}
+        onPointerDown={(e) => (swipeStart.current = e.clientX)}
         onPointerUp={(e) => {
           const s = swipeStart.current;
           swipeStart.current = null;
@@ -146,25 +143,9 @@ export default function ResultClient() {
         >
           {RARITY_LABEL[rarity]}
         </span>
-        <button
-          type="button"
-          onClick={() => setView3d((v) => !v)}
-          aria-pressed={view3d}
-          className="absolute top-2 right-2 z-10 min-h-9 rounded-full bg-white/10 px-3 text-xs font-bold active:bg-white/20"
-        >
-          {view3d ? "3D" : "2D"}
-        </button>
-        {view3d && face && (
-          <Chibi3D
-            face={face}
-            bodyId={BODIES[bodyIdx].id}
-            onUnavailable={() => setView3d(false)}
-            className="aspect-square w-full"
-          />
-        )}
         <canvas
           ref={previewRef}
-          className={`aspect-square w-full transition-opacity ${ready ? "opacity-100" : "opacity-0"} ${view3d && face ? "hidden" : ""}`}
+          className={`aspect-square w-full transition-opacity ${ready ? "opacity-100" : "opacity-0"}`}
         />
         {!ready && (
           <div className="absolute inset-0 grid place-items-center text-sm text-white/60">

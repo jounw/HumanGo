@@ -22,7 +22,7 @@ export default async function DexDetailPage(props: PageProps<"/dex/[id]">) {
   const { data: row } = await supabase
     .from("captures")
     .select(
-      "id,name,rarity,character_path,face_path,scene_path,cutout_path,body_template,captured_at,owner_id,owner:profiles(nickname)",
+      "id,name,rarity,character_path,face_path,scene_path,cutout_path,captured_at,owner_id,owner:profiles(nickname)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -62,8 +62,6 @@ export default async function DexDetailPage(props: PageProps<"/dex/[id]">) {
           timeZone: "Asia/Seoul",
         }).format(new Date(row.captured_at))}
         characterUrl={urls.get(row.character_path) ?? null}
-        faceUrl={row.face_path ? (urls.get(row.face_path) ?? null) : null}
-        bodyId={row.body_template}
         sceneUrl={row.scene_path ? (urls.get(row.scene_path) ?? null) : null}
         cutoutUrl={row.cutout_path ? (urls.get(row.cutout_path) ?? null) : null}
         paths={paths}

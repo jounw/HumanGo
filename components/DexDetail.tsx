@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Chibi3D from "@/components/Chibi3D";
 import { useRouter } from "next/navigation";
 import { BUCKET, CAPTURE_NAME_MAX, type Rarity } from "@/lib/constants";
 import { RARITY_LABEL, RARITY_STYLE } from "@/lib/game/rarity";
@@ -16,8 +15,6 @@ type Props = {
   isMine: boolean;
   capturedAt: string;
   characterUrl: string | null;
-  faceUrl?: string | null; // 있으면 3D 로 볼 수 있다
-  bodyId?: string;
   sceneUrl: string | null;
   cutoutUrl: string | null;
   paths: string[]; // 삭제 시 지울 storage 경로
@@ -29,7 +26,6 @@ export default function DexDetail(p: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(p.name);
   const [original, setOriginal] = useState(false);
-  const [view3d, setView3d] = useState(true);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,24 +90,7 @@ export default function DexDetail(p: Props) {
         >
           {RARITY_LABEL[p.rarity]}
         </span>
-        {p.faceUrl && p.bodyId && (
-          <button
-            type="button"
-            onClick={() => setView3d((v) => !v)}
-            aria-pressed={view3d}
-            className="absolute top-3 right-3 z-10 min-h-9 rounded-full bg-white/10 px-3 text-xs font-bold active:bg-white/20"
-          >
-            {view3d ? "3D" : "2D"}
-          </button>
-        )}
-        {view3d && p.faceUrl && p.bodyId ? (
-          <Chibi3D
-            face={p.faceUrl}
-            bodyId={p.bodyId}
-            onUnavailable={() => setView3d(false)}
-            className="mx-auto aspect-square w-full max-w-xs"
-          />
-        ) : p.characterUrl ? (
+        {p.characterUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={p.characterUrl}
