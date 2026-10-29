@@ -48,3 +48,6 @@ next-env.d.ts
 # 표정 모델 (현재 비활성화, lib/vision/expression.ts 의 ENABLED)
 /public/models/face_landmarker.task
 !.env.local.example
+
+# Supabase CLI 로컬 상태
+/supabase/.temp
