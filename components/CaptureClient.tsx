@@ -17,12 +17,23 @@ import CameraView, {
 import CaptureAnimation, {
   type CaptureJob,
 } from "@/components/CaptureAnimation";
-import { ESCAPE_CHANCE, SEGMENTATION_FPS } from "@/lib/constants";
+import { SEGMENTATION_FPS } from "@/lib/constants";
+import * as sfx from "@/lib/game/sfx";
 import { setCaptureSession } from "@/lib/game/session";
 import type { CaptureOutcome } from "@/lib/game/captureAnimation";
-import { buildScene, extractTarget, grabFrame } from "@/lib/vision/capture";
+import {
+  buildScene,
+  extractTarget,
+  grabFrame,
+  mirrorBox,
+} from "@/lib/vision/capture";
 import { screenToVideo, type Viewport } from "@/lib/vision/geometry";
 import { preloadOpenCV } from "@/lib/vision/inpaint";
+import {
+  escapeChance,
+  expressionWeirdness,
+  warmExpression,
+} from "@/lib/vision/expression";
 import { warmFaceDetector } from "@/lib/vision/face";
 import { drawPeople } from "@/lib/vision/overlay";
 import {
@@ -63,6 +74,7 @@ export default function CaptureClient() {
   const [ballImg, setBallImg] = useState<HTMLImageElement | null>(null);
   const [job, setJob] = useState<CaptureJob | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [muted, setMuted] = useState(false);
   // 개발 모드이거나 주소에 ?debug 가 있으면 FPS 표시 (배포본으로 실기기 테스트할 때 사용)
   const debug = useSyncExternalStore(
     () => () => {},
@@ -91,10 +103,14 @@ export default function CaptureClient() {
       });
     warmStillSegmenter().catch(() => {});
     warmFaceDetector().catch(() => {});
+    warmExpression().catch(() => {});
     preloadOpenCV().catch(() => {});
     const img = new Image();
     img.src = "/ball/capture-ball.svg";
     img.onload = () => !dead && setBallImg(img);
+    // 저장된 음소거 설정 반영 (localStorage 는 클라이언트에서만 읽을 수 있다)
+    const savedMuted = sfx.isMuted();
+    queueMicrotask(() => !dead && setMuted(savedMuted));
     return () => {
       dead = true;
       seg?.close();
@@ -202,7 +218,7 @@ export default function CaptureClient() {
 
   // 명중: 그 순간의 프레임을 고정하고 처리를 시작한다 (모든 무거운 처리는 이 한 장에 대해서만)
   const handleHit = useCallback(
-    (person: Person, point: { x: number; y: number }, ballR: number) => {
+    async (person: Person, point: { x: number; y: number }, ballR: number) => {
       const vp = vpRef.current;
       if (!video || !vp) return;
       const still = grabFrame(video, vp.mirror);
@@ -211,6 +227,13 @@ export default function CaptureClient() {
 
       const target = extractTarget(still, hit, person, vp.mirror);
       const scene = target.then((t) => buildScene(still, t));
+      // 표정이 이상할수록 탈출 확률이 올라간다. 분석이 늦어지면 보통 표정으로 간주해 연출을 지연시키지 않는다.
+      const weird = await Promise.race([
+        expressionWeirdness(still, mirrorBox(person.bbox, vp.mirror)),
+        new Promise<number>((r) => setTimeout(() => r(0), 500)),
+      ]);
+      const chance = escapeChance(weird);
+      if (weird >= 0.5) flash("앗, 표정이 이상해요! 도망갈지도…");
       const next: CaptureJob = {
         still,
         target,
@@ -218,12 +241,12 @@ export default function CaptureClient() {
         viewport: stillVp,
         ballPoint: point,
         ballStartR: ballR,
-        escape: Math.random() < ESCAPE_CHANCE,
+        escape: Math.random() < chance,
       };
       jobRef.current = { job: next, mirror: vp.mirror };
       setJob(next);
     },
-    [video],
+    [video, flash],
   );
 
   const handleDone = useCallback(
@@ -281,21 +304,36 @@ export default function CaptureClient() {
       {/* 상단 바 */}
       <div className="absolute inset-x-0 top-0 z-40 flex items-center justify-between p-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <Link
-          href="/"
+          href="/home"
           aria-label="홈으로"
           className="flex size-11 items-center justify-center rounded-full bg-black/45 text-xl backdrop-blur"
         >
           ‹
         </Link>
-        <button
-          aria-label="카메라 전환"
-          onClick={() =>
-            setFacing((f) => (f === "environment" ? "user" : "environment"))
-          }
-          className="flex size-11 items-center justify-center rounded-full bg-black/45 text-lg backdrop-blur"
-        >
-          ⟲
-        </button>
+        <div className="flex gap-2">
+          <button
+            aria-label={muted ? "소리 켜기" : "소리 끄기"}
+            aria-pressed={muted}
+            onClick={() => {
+              const next = !muted;
+              sfx.setMuted(next);
+              setMuted(next);
+              if (!next) sfx.tick();
+            }}
+            className="flex size-11 items-center justify-center rounded-full bg-black/45 text-lg backdrop-blur"
+          >
+            {muted ? "🔇" : "🔊"}
+          </button>
+          <button
+            aria-label="카메라 전환"
+            onClick={() =>
+              setFacing((f) => (f === "environment" ? "user" : "environment"))
+            }
+            className="flex size-11 items-center justify-center rounded-full bg-black/45 text-lg backdrop-blur"
+          >
+            ⟲
+          </button>
+        </div>
       </div>
 
       {/* 안내 */}
@@ -340,7 +378,7 @@ export default function CaptureClient() {
             다시 시도
           </button>
           <Link
-            href="/"
+            href="/home"
             className="text-sm text-white/60 underline underline-offset-4"
           >
             홈으로

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { DemoDexList } from "@/components/demo/DemoViews";
 import { DEMO } from "@/lib/demo/store";
 import CharacterCard from "@/components/CharacterCard";
+import ResetDexButton from "@/components/ResetDexButton";
 import { listCaptures } from "@/lib/dex";
 import { createClient } from "@/lib/supabase/server";
 
@@ -28,7 +29,7 @@ export default async function DexPage(props: PageProps<"/dex">) {
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 py-6">
       <header className="flex items-center gap-3">
         <Link
-          href="/"
+          href="/home"
           aria-label="홈으로"
           className="flex size-11 items-center justify-center rounded-full bg-white/10 text-xl"
         >
@@ -84,6 +85,7 @@ export default async function DexPage(props: PageProps<"/dex">) {
           ))}
         </ul>
       )}
+      {mine && items.length > 0 && <ResetDexButton />}
     </main>
   );
 }

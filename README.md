@@ -1,4 +1,4 @@
-# 휴먼GO
+# HumanGo
 
 카메라로 친구를 비추고 캡처볼을 던져 잡는 AR 웹게임. 잡힌 친구는 얼굴만 따서 치비 캐릭터로 도감에 등록된다.
 설계 문서: `PLAN.md` (Downloads). 게임 이름/볼 이름/수치는 `lib/constants.ts` 에서 바꾼다.
@@ -23,16 +23,31 @@ npm run dev
 
 폰으로 로컬 테스트할 때 카메라는 https 에서만 동작하므로 `npx next dev --experimental-https` 를 쓰거나 Vercel 프리뷰로 확인한다.
 
-## Supabase 설정
+## Supabase 설정 (로그인/도감 저장)
 
-1. 프로젝트를 만들고 `Project Settings > API` 의 URL 과 anon key 를 `.env.local` 에 넣는다.
-2. SQL Editor 에서 `supabase/migrations/0001_init.sql` 을 실행한다. (테이블, RLS, 가입 시 프로필 자동 생성 트리거, `captures` 비공개 버킷과 정책)
-3. `Authentication > Providers > Email` 에서 **Confirm email 을 끈다.** (켜져 있으면 가입 직후 로그인이 되지 않는다)
-4. (선택) 외부인 가입 차단: `.env.local` / Vercel 환경변수에 `SIGNUP_CODE` 를 넣으면 가입 시 코드를 입력해야 한다. 서버에서만 검증되며 클라이언트에 노출되지 않는다.
+로그인(이메일+비밀번호, 닉네임 가입)은 Supabase Auth 로 이미 구현돼 있다. 아래만 설정하면 동작한다.
+
+1. https://supabase.com 에서 프로젝트를 만든다.
+2. `Project Settings > API` 에서 아래 값을 `.env.local` 에 넣는다.
+   - `NEXT_PUBLIC_SUPABASE_URL` — Project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` — anon(public) key
+   - `SUPABASE_SERVICE_ROLE_KEY` — service_role key (등급 뽑기 서버용, **절대 공개 금지**)
+3. SQL Editor 에서 `supabase/migrations/` 의 파일을 번호 순서대로 실행한다. (`0001` → `0002` → `0004`)
+4. `Authentication > Providers > Email` 에서 **Confirm email 을 끈다.** (켜져 있으면 가입 직후 로그인이 되지 않는다)
+5. (선택) 외부인 가입 차단: `SIGNUP_CODE` 를 넣으면 가입 시 코드를 입력해야 한다. 서버에서만 검증된다.
+6. `npm run dev` → `/signup` 에서 가입하면 바로 `/home` 으로 들어간다.
 
 ## Vercel 배포
 
-환경변수 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SIGNUP_CODE`(선택)를 넣고 배포한다.
+1. 코드를 GitHub 에 올린다. (`.env.local` 은 `.gitignore` 에 있어 올라가지 않는다)
+2. https://vercel.com → `Add New > Project` → 저장소 선택. 프레임워크는 Next.js 로 자동 인식된다.
+3. `Environment Variables` 에 넣는다:
+   `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
+   `OPENAI_API_KEY`(전설/신화 AI 변신, 선택), `SIGNUP_CODE`(선택)
+4. Deploy. 배포 주소(`https://xxx.vercel.app`)는 https 라서 폰 카메라가 바로 동작한다.
+5. Supabase `Authentication > URL Configuration` 의 Site URL 을 배포 주소로 바꾼다.
+
+이후 `main` 에 push 하면 자동으로 다시 배포된다. CLI 로 하려면 `npx vercel` (프리뷰) / `npx vercel --prod`.
 실기기에서 FPS/감지 인원을 보려면 캡처 화면 주소 뒤에 `?debug` 를 붙인다. (`/capture?debug`)
 
 ## 개발 전용 도구

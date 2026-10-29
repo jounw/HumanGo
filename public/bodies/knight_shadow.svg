@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" fill="none" stroke-linejoin="round" stroke-linecap="round">
+  <defs>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9d5ff"/><stop offset="1" stop-color="#a78bfa"/></linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f7ff"/><stop offset="1" stop-color="#8e9ccc"/></linearGradient>
+  </defs>
+  <!-- 망토 -->
+  <path d="M182 330 Q120 430 96 500 Q256 520 416 500 Q392 430 330 330 Z" fill="#3b0764" stroke="#2b2140" stroke-width="5"/>
+  <path d="M182 330 Q150 430 140 496 Q256 508 372 496 Q362 430 330 330" fill="#1e1b4b" opacity=".45"/>
+  <g stroke="#2b2140" stroke-width="5">
+    <!-- 다리 / 장화 -->
+    <rect x="222" y="418" width="30" height="56" rx="12" fill="url(#steel)"/>
+    <rect x="260" y="418" width="30" height="56" rx="12" fill="url(#steel)"/>
+    <ellipse cx="233" cy="482" rx="27" ry="14" fill="url(#gold)"/>
+    <ellipse cx="279" cy="482" rx="27" ry="14" fill="url(#gold)"/>
+    <!-- 팔 -->
+    <rect x="160" y="338" width="38" height="74" rx="18" fill="url(#steel)" transform="rotate(8 180 338)"/>
+    <rect x="314" y="338" width="38" height="74" rx="18" fill="url(#steel)" transform="rotate(-8 332 338)"/>
+    <circle cx="172" cy="416" r="16" fill="url(#gold)"/>
+    <circle cx="340" cy="416" r="16" fill="url(#gold)"/>
+  </g>
+  <!-- 검 -->
+  <g stroke="#2b2140" stroke-width="4">
+    <path d="M358 326 L370 326 L372 398 L356 398 Z" fill="url(#steel)" transform="rotate(-8 364 400)"/>
+    <rect x="344" y="396" width="40" height="9" rx="4" fill="url(#gold)" transform="rotate(-8 364 400)"/>
+    <rect x="359" y="404" width="10" height="22" rx="4" fill="#1e1b4b" transform="rotate(-8 364 400)"/>
+  </g>
+  <!-- 갑옷 몸통 -->
+  <g stroke="#2b2140" stroke-width="5">
+    <rect x="194" y="326" width="124" height="106" rx="30" fill="url(#steel)"/>
+    <path d="M256 340 l9 17 l19 3 l-14 13 l4 19 l-18 -9 l-18 9 l4 -19 l-14 -13 l19 -3 z" fill="url(#gold)" stroke-width="4"/>
+    <rect x="194" y="410" width="124" height="16" rx="8" fill="url(#gold)" stroke-width="4"/>
+    <!-- 어깨 보호대 -->
+    <ellipse cx="190" cy="340" rx="30" ry="22" fill="url(#gold)"/>
+    <ellipse cx="322" cy="340" rx="30" ry="22" fill="url(#gold)"/>
+    <path d="M170 336 l8 -14 l8 14 M326 336 l8 -14 l8 14" stroke="#2b2140" stroke-width="4"/>
+  </g>
+</svg>

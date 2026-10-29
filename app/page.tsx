@@ -1,86 +1,96 @@
 import Link from "next/link";
-import { logout } from "@/app/(auth)/actions";
-import CharacterCard from "@/components/CharacterCard";
-import { DemoHome } from "@/components/demo/DemoViews";
-import { DEMO } from "@/lib/demo/store";
+import ModelPreloader from "@/components/ModelPreloader";
 import { GAME_NAME } from "@/lib/constants";
-import { listCaptures } from "@/lib/dex";
-import { createClient } from "@/lib/supabase/server";
+import { DEMO, DEMO_NICKNAME } from "@/lib/demo/store";
 
-export default async function HomePage() {
-  if (DEMO) return <DemoHome />;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { data: profile } = user
-    ? await supabase
-        .from("profiles")
-        .select("nickname")
-        .eq("id", user.id)
-        .maybeSingle()
-    : { data: null };
-
-  const { count } = user
-    ? await supabase
-        .from("captures")
-        .select("id", { count: "exact", head: true })
-        .eq("owner_id", user.id)
-    : { count: 0 };
-
-  const recent = user
-    ? await listCaptures(supabase, { ownerId: user.id, limit: 4 })
-    : [];
-
+// 시작 화면: 로그인 여부와 관계없이 보이고, "Start" 는 /home 으로 간다.
+// (비로그인이면 /home 에서 로그인 화면으로 보내진다)
+export default function StartPage() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-8 px-4 py-8">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-black tracking-tight">{GAME_NAME}</h1>
-        <form action={logout}>
-          <button className="min-h-11 rounded-lg px-3 text-sm text-white/60 hover:text-white">
-            로그아웃
-          </button>
-        </form>
-      </header>
+    <main className="relative isolate flex min-h-dvh flex-col items-center justify-between overflow-hidden px-6 pt-[max(3rem,env(safe-area-inset-top))] pb-[max(2.5rem,env(safe-area-inset-bottom))] text-center">
+      <ModelPreloader />
+      {/* 배경: 은은한 빛 번짐 + 반짝이는 점 */}
+      <div aria-hidden className="start-bg absolute inset-0 -z-10" />
+      <div aria-hidden className="absolute inset-0 -z-10">
+        {STARS.map((s, i) => (
+          <span
+            key={i}
+            className="start-star absolute rounded-full bg-white"
+            style={{
+              left: `${s.x}%`,
+              top: `${s.y}%`,
+              width: s.r,
+              height: s.r,
+              animationDelay: `${s.d}s`,
+            }}
+          />
+        ))}
+      </div>
 
-      <section>
-        <p className="text-white/60">안녕하세요,</p>
-        <p className="text-3xl font-bold">
-          {profile?.nickname ?? "트레이너"}님
-        </p>
+      <p className="text-xs font-semibold tracking-[0.3em] text-emerald-300/90">
+        AR FRIEND CATCHING GAME
+      </p>
+
+      <section className="flex flex-col items-center gap-8">
+        <div className="start-orb relative grid size-44 place-items-center">
+          <span
+            aria-hidden
+            className="start-ring absolute inset-0 rounded-full"
+          />
+          <span
+            aria-hidden
+            className="start-ring start-ring-2 absolute inset-0 rounded-full"
+          />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/ball/capture-ball.svg"
+            alt="Capture ball"
+            className="start-ball size-28 drop-shadow-[0_12px_30px_rgba(94,234,212,0.45)]"
+          />
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <h1 className="text-6xl font-black tracking-tight">{GAME_NAME}</h1>
+          <p className="text-xl font-semibold text-white/90">
+            Catch your friends.
+            <br />
+            Keep the memories.
+          </p>
+          <p className="text-sm text-white/55">The school trip photo game</p>
+        </div>
       </section>
 
-      <Link
-        href="/capture"
-        className="flex min-h-40 flex-col items-center justify-center gap-2 rounded-3xl bg-emerald-400 text-black shadow-lg shadow-emerald-400/20 active:scale-[0.98]"
-      >
-        <span className="text-3xl font-black">잡으러 가기</span>
-        <span className="text-sm font-medium opacity-70">
-          카메라로 친구를 찾아보세요
-        </span>
-      </Link>
-
-      <Link
-        href="/dex"
-        className="flex items-center justify-between rounded-2xl bg-white/10 px-5 py-4 ring-1 ring-white/10 active:bg-white/15"
-      >
-        <span className="font-semibold">내 도감</span>
-        <span className="text-white/60">{count ?? 0}명 잡음 ›</span>
-      </Link>
-
-      {recent.length > 0 && (
-        <section className="flex flex-col gap-3">
-          <h2 className="font-semibold">최근 잡은 친구</h2>
-          <ul className="grid grid-cols-2 gap-3">
-            {recent.map((item) => (
-              <li key={item.id}>
-                <CharacterCard item={item} showOwner={false} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <div className="flex w-full max-w-xs flex-col items-center gap-3">
+        <Link
+          href="/home"
+          className="flex min-h-14 w-full items-center justify-center rounded-2xl bg-emerald-400 text-lg font-black text-black shadow-lg shadow-emerald-400/25 active:scale-[0.98]"
+        >
+          Start
+        </Link>
+        {DEMO ? (
+          <p className="text-sm text-white/60">
+            {DEMO_NICKNAME}님으로 시작해요
+          </p>
+        ) : (
+          <p className="text-sm text-white/45">
+            A photo game to play with your friends
+          </p>
+        )}
+      </div>
     </main>
   );
 }
+
+// 별 위치는 고정값으로 두어 서버/클라이언트 렌더가 항상 같다
+const STARS = [
+  { x: 8, y: 12, r: 3, d: 0 },
+  { x: 22, y: 30, r: 2, d: 1.1 },
+  { x: 85, y: 10, r: 3, d: 0.6 },
+  { x: 70, y: 26, r: 2, d: 1.7 },
+  { x: 14, y: 62, r: 2, d: 0.3 },
+  { x: 90, y: 58, r: 3, d: 1.3 },
+  { x: 40, y: 8, r: 2, d: 2.1 },
+  { x: 62, y: 72, r: 2, d: 0.9 },
+  { x: 30, y: 82, r: 3, d: 1.9 },
+  { x: 78, y: 88, r: 2, d: 0.4 },
+];

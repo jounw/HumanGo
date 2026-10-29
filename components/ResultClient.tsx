@@ -2,18 +2,29 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
-import { BODIES, composeChibi } from "@/lib/game/chibi";
-import { RARITY_LABEL, RARITY_STYLE, rollRarity } from "@/lib/game/rarity";
+import RarityBurst from "@/components/RarityBurst";
+import { isAiRarity } from "@/lib/game/aiPrompt";
+import { upgradeCharacter } from "@/lib/game/aiUpgrade";
+import { bodyForRarity, composeChibi } from "@/lib/game/chibi";
+import { hashSeed } from "@/lib/game/seed";
+import { RARITY_LABEL, RARITY_STYLE } from "@/lib/game/rarity";
+import { pickRarity } from "@/lib/demo/rarityOverride";
 import { getCaptureSession, setCaptureSession } from "@/lib/game/session";
 import { DEMO } from "@/lib/demo/store";
 import { demoRegister, registerCapture } from "@/lib/game/upload";
-import { CAPTURE_NAME_MAX } from "@/lib/constants";
+import { CAPTURE_NAME_MAX, type Rarity } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 import { extractFace } from "@/lib/vision/face";
 
 const noopSubscribe = () => () => {};
 
-export default function ResultClient() {
+function ResultBody({
+  rarity,
+  captureId,
+}: {
+  rarity: Rarity;
+  captureId: string;
+}) {
   const router = useRouter();
   // 서버에서는 null, 클라이언트에서는 캡처 화면이 남긴 세션 (하이드레이션 안전)
   const session = useSyncExternalStore(
@@ -25,14 +36,18 @@ export default function ResultClient() {
   const [face, setFace] = useState<HTMLCanvasElement | null>(null);
   const [faceFound, setFaceFound] = useState(true);
   const [faceError, setFaceError] = useState(false);
-  const [bodyIdx, setBodyIdx] = useState(0);
   const [character, setCharacter] = useState<HTMLCanvasElement | null>(null);
-  const [rarity] = useState(() => rollRarity());
+  // 전설/신화는 이미지 생성 AI 가 다시 그린다. 실패하면 기본 몸통 합성 결과를 그대로 쓴다.
+  const body = bodyForRarity(rarity, hashSeed(captureId)); // 같은 등급 안에서도 id 마다 다른 몸통
+  const useAi = isAiRarity(rarity);
+  const [aiResult, setAiResult] = useState<HTMLCanvasElement | null>(null);
+  const [aiStatus, setAiStatus] = useState<"working" | "done" | "failed">(
+    "working",
+  );
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const previewRef = useRef<HTMLCanvasElement>(null);
-  const swipeStart = useRef<number | null>(null);
 
   // 세션이 없으면(새로고침 등) 캡처 화면으로
   useEffect(() => {
@@ -58,31 +73,42 @@ export default function ResultClient() {
     };
   }, [session]);
 
-  // 몸통이 바뀔 때마다 캐릭터 다시 합성
+  // 등급에 정해진 몸통에 얼굴을 합성 (몸통은 고를 수 없다)
   useEffect(() => {
     if (!face) return;
     let dead = false;
-    composeChibi(face, BODIES[bodyIdx]).then((c) => !dead && setCharacter(c));
+    composeChibi(face, body).then((c) => !dead && setCharacter(c));
     return () => {
       dead = true;
     };
-  }, [face, bodyIdx]);
+  }, [face, body]);
+
+  // 전설/신화: 얼굴 크롭을 AI 로 보내 더 멋진 모습으로 다시 그린다
+  useEffect(() => {
+    if (!face || !isAiRarity(rarity)) return;
+    const ctrl = new AbortController();
+    upgradeCharacter(face, rarity, captureId, ctrl.signal).then((c) => {
+      if (ctrl.signal.aborted) return;
+      setAiResult(c);
+      setAiStatus(c ? "done" : "failed");
+    });
+    return () => ctrl.abort();
+  }, [face, rarity, captureId]);
+
+  const shown = aiResult ?? character;
 
   useEffect(() => {
     const canvas = previewRef.current;
-    if (!canvas || !character) return;
-    canvas.width = character.width;
-    canvas.height = character.height;
+    if (!canvas || !shown) return;
+    canvas.width = shown.width;
+    canvas.height = shown.height;
     const ctx = canvas.getContext("2d")!;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(character, 0, 0);
-  }, [character]);
-
-  const step = (d: number) =>
-    setBodyIdx((i) => (i + d + BODIES.length) % BODIES.length);
+    ctx.drawImage(shown, 0, 0);
+  }, [shown]);
 
   async function register() {
-    if (!session || !face || !character || saving) return;
+    if (!session || !face || !shown || saving || aiBusy) return;
     setSaving(true);
     setError(null);
     try {
@@ -92,10 +118,11 @@ export default function ResultClient() {
           : (i: Parameters<typeof registerCapture>[1]) =>
               registerCapture(createClient(), i)
       )({
+        id: captureId,
         name,
-        bodyId: BODIES[bodyIdx].id,
+        bodyId: body.id,
         rarity,
-        character,
+        character: shown,
         face,
         scene: session.scene,
         cutout: session.target.cutout,
@@ -118,7 +145,8 @@ export default function ResultClient() {
   }
 
   const style = RARITY_STYLE[rarity];
-  const ready = !!character;
+  const ready = !!shown;
+  const aiBusy = useAi && aiStatus === "working";
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 py-6">
@@ -129,20 +157,14 @@ export default function ResultClient() {
 
       <section
         aria-label="캐릭터 미리보기"
-        className={`relative mx-auto w-full max-w-xs touch-pan-y rounded-3xl bg-white/5 p-4 ${style.ring} ${style.glow}`}
-        onPointerDown={(e) => (swipeStart.current = e.clientX)}
-        onPointerUp={(e) => {
-          const s = swipeStart.current;
-          swipeStart.current = null;
-          if (s !== null && Math.abs(e.clientX - s) > 40)
-            step(e.clientX < s ? 1 : -1);
-        }}
+        className={`relative mx-auto w-full max-w-xs rounded-3xl bg-white/5 p-4 ${style.ring} ${style.glow}`}
       >
         <span
           className={`absolute top-3 left-3 rounded-full px-2.5 py-1 text-xs font-bold ${style.badge}`}
         >
           {RARITY_LABEL[rarity]}
         </span>
+        <RarityBurst rarity={rarity} active={ready} />
         <canvas
           ref={previewRef}
           className={`aspect-square w-full transition-opacity ${ready ? "opacity-100" : "opacity-0"}`}
@@ -154,33 +176,20 @@ export default function ResultClient() {
         )}
       </section>
 
-      <div className="flex items-center justify-center gap-4">
-        <button
-          aria-label="이전 몸통"
-          onClick={() => step(-1)}
-          className="size-11 rounded-full bg-white/10 text-xl active:bg-white/20"
+      {useAi && (
+        <p
+          role="status"
+          className="rounded-xl bg-white/5 px-4 py-3 text-center text-sm text-white/70"
         >
-          ‹
-        </button>
-        <div className="min-w-24 text-center">
-          <p className="font-semibold">{BODIES[bodyIdx].name}</p>
-          <div className="mt-1 flex justify-center gap-1.5" aria-hidden>
-            {BODIES.map((b, i) => (
-              <span
-                key={b.id}
-                className={`size-1.5 rounded-full ${i === bodyIdx ? "bg-emerald-300" : "bg-white/25"}`}
-              />
-            ))}
-          </div>
-        </div>
-        <button
-          aria-label="다음 몸통"
-          onClick={() => step(1)}
-          className="size-11 rounded-full bg-white/10 text-xl active:bg-white/20"
-        >
-          ›
-        </button>
-      </div>
+          {aiStatus === "working" &&
+            `${RARITY_LABEL[rarity]} 등급의 모습으로 변신 중… (최대 1~2분)`}
+          {aiStatus === "done" &&
+            `${RARITY_LABEL[rarity]} 등급의 모습으로 변신했어요!`}
+          {aiStatus === "failed" &&
+            "AI 변신에 실패해서 기본 모습으로 등록해요."}
+        </p>
+      )}
+
 
       {ready && !faceFound && (
         <p
@@ -216,10 +225,16 @@ export default function ResultClient() {
         )}
         <button
           type="submit"
-          disabled={!ready || saving || name.trim().length === 0}
+          disabled={!ready || aiBusy || saving || name.trim().length === 0}
           className="min-h-12 rounded-xl bg-emerald-400 px-4 font-bold text-black active:scale-[0.98] disabled:opacity-40"
         >
-          {saving ? "등록 중…" : error ? "다시 시도" : "도감에 등록"}
+          {saving
+            ? "등록 중…"
+            : aiBusy
+              ? "변신 중…"
+              : error
+                ? "다시 시도"
+                : "도감에 등록"}
         </button>
         <button
           type="button"
@@ -235,4 +250,90 @@ export default function ResultClient() {
       </form>
     </main>
   );
+}
+
+type Roll = { id: string; rarity: Rarity };
+
+/** 등급 뽑기: 일반 모드는 서버가 뽑고(조작 방지), 데모는 이 브라우저에서 뽑는다. */
+async function fetchRoll(): Promise<Roll> {
+  if (DEMO) return { id: crypto.randomUUID(), rarity: pickRarity(true) };
+  const res = await fetch("/api/roll", { method: "POST" });
+  const body = (await res.json().catch(() => ({}))) as {
+    id?: string;
+    rarity?: Rarity;
+    error?: string;
+  };
+  if (!res.ok || !body.id || !body.rarity)
+    throw new Error(body.error ?? "등급을 정하지 못했어요.");
+  return { id: body.id, rarity: body.rarity };
+}
+
+export default function ResultClient() {
+  const router = useRouter();
+  const session = useSyncExternalStore(
+    noopSubscribe,
+    getCaptureSession,
+    () => null,
+  );
+  const [roll, setRoll] = useState<Roll | null>(null);
+  const [rollError, setRollError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const hasSession = !!session;
+
+  // 세션이 있을 때만(= 방금 잡았을 때만) 등급을 뽑는다. 새로고침으로 다시 뽑을 수 없다.
+  useEffect(() => {
+    if (!hasSession) {
+      router.replace("/capture");
+      return;
+    }
+    let dead = false;
+    fetchRoll()
+      .then((r) => !dead && setRoll(r))
+      .catch(
+        (e) =>
+          !dead &&
+          setRollError(
+            e instanceof Error ? e.message : "등급을 정하지 못했어요.",
+          ),
+      );
+    return () => {
+      dead = true;
+    };
+  }, [hasSession, attempt, router]);
+
+  if (rollError) {
+    return (
+      <main className="grid min-h-dvh place-items-center px-6">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <p className="text-lg font-semibold">{rollError}</p>
+          <button
+            onClick={() => {
+              setRollError(null);
+              setAttempt((n) => n + 1);
+            }}
+            className="min-h-12 rounded-xl bg-emerald-400 px-6 font-bold text-black"
+          >
+            다시 시도
+          </button>
+          <button
+            onClick={() => {
+              setCaptureSession(null);
+              router.replace("/capture");
+            }}
+            className="min-h-11 text-sm text-white/55"
+          >
+            등록하지 않고 계속 잡기
+          </button>
+        </div>
+      </main>
+    );
+  }
+  if (!roll) {
+    return (
+      <main className="grid min-h-dvh place-items-center text-white/60">
+        {hasSession ? "등급을 정하는 중…" : "불러오는 중…"}
+      </main>
+    );
+  }
+  return <ResultBody key={roll.id} rarity={roll.rarity} captureId={roll.id} />;
 }

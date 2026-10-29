@@ -75,14 +75,15 @@ export function planThrow(from: Pt, v: { vx: number; vy: number }): Throw {
     x: from.x + (v.vx / raw) * range,
     y: from.y + (v.vy / raw) * range,
   };
-  return { kind: "fly", from, to, flightMs, arc: range * 0.12 };
+  return { kind: "fly", from, to, flightMs, arc: range * 0.16 };
 }
 
 /** 비행 진행도 u(0~1)에서의 볼 위치와 크기 배율 */
 export function ballAt(th: Extract<Throw, { kind: "fly" }>, u: number) {
   const x = th.from.x + (th.to.x - th.from.x) * u;
   const y = th.from.y + (th.to.y - th.from.y) * u - th.arc * 4 * u * (1 - u);
-  const scale = 1 + (THROW_END_SCALE - 1) * u;
+  // 원근: 거리에 반비례해 작아진다 (처음에 빨리 작아지고 멀수록 천천히)
+  const scale = 1 / (1 + (1 / THROW_END_SCALE - 1) * u);
   return { x, y, scale };
 }
 
@@ -159,5 +160,5 @@ export function assistAim(th: Throw, people: Person[], vp: Viewport): Throw {
   }
   if (!best) return th;
   const dist = Math.hypot(best.pt.x - th.from.x, best.pt.y - th.from.y);
-  return { ...th, to: best.pt, arc: dist * 0.12 };
+  return { ...th, to: best.pt, arc: dist * 0.16 };
 }

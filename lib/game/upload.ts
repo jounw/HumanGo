@@ -13,6 +13,7 @@ import { demoSave } from "@/lib/demo/store";
 import { newCanvas } from "@/lib/vision/mask";
 
 export type RegisterInput = {
+  id: string; // 능력치/스킬이 이 id 로 정해지므로 등록 전에 미리 정해 둔다
   name: string;
   bodyId: string;
   rarity: Rarity;
@@ -58,7 +59,7 @@ export async function registerCapture(
   } = await supabase.auth.getUser();
   if (!user) throw new Error("로그인이 필요해요.");
 
-  const id = crypto.randomUUID();
+  const id = input.id;
   const base = `${user.id}/${id}`;
   const paths = {
     character: `${base}/character.png`,
@@ -119,7 +120,7 @@ export async function demoRegister(input: RegisterInput): Promise<string> {
   if (name.length < 1 || name.length > CAPTURE_NAME_MAX) {
     throw new Error(`이름은 1~${CAPTURE_NAME_MAX}자로 입력해 주세요.`);
   }
-  const id = crypto.randomUUID();
+  const id = input.id;
   const [character, scene, cutout] = await Promise.all([
     canvasToBlob(input.character, "image/png"),
     canvasToBlob(

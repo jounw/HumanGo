@@ -44,3 +44,7 @@ next-env.d.ts
 /public/models/wasm
 /public/opencv
 /public/dev-test
+
+# 표정 모델 (현재 비활성화, lib/vision/expression.ts 의 ENABLED)
+/public/models/face_landmarker.task
+!.env.local.example

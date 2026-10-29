@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import CharacterCard from "@/components/CharacterCard";
 import DexDetail from "@/components/DexDetail";
+import RarityPicker from "@/components/demo/RarityPicker";
+import ResetDexButton from "@/components/ResetDexButton";
 import { GAME_NAME } from "@/lib/constants";
 import type { DexItem } from "@/lib/dex";
 import {
@@ -16,18 +18,19 @@ import {
 
 function useRecords() {
   const [records, setRecords] = useState<DemoRecord[] | null>(null);
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     let dead = false;
     demoList().then((r) => !dead && setRecords(r));
     return () => {
       dead = true;
     };
-  }, []);
-  return records;
+  }, [tick]);
+  return [records, () => setTick((t) => t + 1)] as const;
 }
 
 export function DemoHome() {
-  const records = useRecords();
+  const [records] = useRecords();
   const recent: DexItem[] = (records ?? []).slice(0, 4).map(toItem);
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-8 px-4 py-8">
@@ -50,6 +53,7 @@ export function DemoHome() {
           웹캠으로 친구를 찾아보세요
         </span>
       </Link>
+      <RarityPicker />
       <Link
         href="/dex"
         className="flex items-center justify-between rounded-2xl bg-white/10 px-5 py-4 ring-1 ring-white/10 active:bg-white/15"
@@ -74,13 +78,13 @@ export function DemoHome() {
 }
 
 export function DemoDexList() {
-  const records = useRecords();
+  const [records, reload] = useRecords();
   const items = (records ?? []).map(toItem);
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col gap-5 px-4 py-6">
       <header className="flex items-center gap-3">
         <Link
-          href="/"
+          href="/home"
           aria-label="홈으로"
           className="flex size-11 items-center justify-center rounded-full bg-white/10 text-xl"
         >
@@ -108,6 +112,7 @@ export function DemoDexList() {
           ))}
         </ul>
       )}
+      {items.length > 0 && <ResetDexButton onDone={reload} />}
     </main>
   );
 }

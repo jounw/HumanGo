@@ -4,7 +4,11 @@ import { isRarity } from "@/lib/game/rarity";
 import type { DexItem } from "@/lib/dex";
 
 export const DEMO = process.env.NEXT_PUBLIC_DEMO === "1";
-export const DEMO_NICKNAME = "데모";
+export const DEMO_NICKNAME = "원조운";
+
+// 이 값을 올리면 다음 접속 때 데모 도감이 한 번 비워진다 (도감 리셋)
+const DEMO_DATA_VERSION = "2";
+const VERSION_KEY = "humango-demo-version";
 
 export type DemoRecord = {
   id: string;
@@ -42,12 +46,29 @@ async function tx<T>(
   });
 }
 
-export const demoSave = (r: DemoRecord) => tx("readwrite", (s) => s.put(r));
+export async function demoSave(r: DemoRecord) {
+  await ensureVersion(); // 버전 확인이 저장 뒤에 일어나 방금 저장한 기록을 지우지 않도록
+  return tx("readwrite", (s) => s.put(r));
+}
 export const demoGet = (id: string) =>
   tx<DemoRecord | undefined>("readonly", (s) => s.get(id));
 export const demoDelete = (id: string) => tx("readwrite", (s) => s.delete(id));
 
+export const demoClear = () => tx("readwrite", (s) => s.clear());
+
+/** 저장된 데이터 버전이 다르면 도감을 한 번 비운다. */
+async function ensureVersion() {
+  try {
+    if (localStorage.getItem(VERSION_KEY) === DEMO_DATA_VERSION) return;
+    await demoClear();
+    localStorage.setItem(VERSION_KEY, DEMO_DATA_VERSION);
+  } catch {
+    // localStorage 를 못 쓰면 리셋 없이 진행
+  }
+}
+
 export async function demoList(): Promise<DemoRecord[]> {
+  await ensureVersion();
   const all = await tx<DemoRecord[]>("readonly", (s) => s.getAll());
   return all.sort((a, b) => b.capturedAt.localeCompare(a.capturedAt));
 }

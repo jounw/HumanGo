@@ -3,6 +3,7 @@
 // 배경 채우기(인페인팅)가 아직이면 하얗게 빛난 상태로 기다린다.
 
 import { BALL_SHAKE_COUNT, CAPTURE_DURATION_MS } from "@/lib/constants";
+import * as sfx from "@/lib/game/sfx";
 import { newCanvas } from "@/lib/vision/mask";
 import { videoRectOnScreen, type Viewport } from "@/lib/vision/geometry";
 import type { Target } from "@/lib/vision/capture";
@@ -142,6 +143,13 @@ export async function playCapture(inp: AnimInput): Promise<CaptureOutcome> {
     let tShake = 0;
     let tEnd = 0;
     let stage: "glow" | "wait" | "suck" | "shake" | "end" = "glow";
+    let lastK = -1;
+    // 명중 순간의 불꽃 (px/ms)
+    const sparks = Array.from({ length: 16 }, (_, i) => ({
+      a: (i / 16) * Math.PI * 2 + Math.random() * 0.4,
+      v: 0.12 + Math.random() * 0.26,
+      size: 2 + Math.random() * 3,
+    }));
 
     const frame = (now: number) => {
       if (inp.isCancelled() || failed) return resolve("cancelled");
@@ -153,6 +161,15 @@ export async function playCapture(inp: AnimInput): Promise<CaptureOutcome> {
 
       const el = now - t0;
       const ready = target && scene;
+
+      // 명중 직후 0.26초 동안 화면이 흔들린다
+      const shake = Math.max(0, 1 - el / 260) * 7;
+      if (shake > 0) {
+        ctx.translate(
+          (Math.random() - 0.5) * 2 * shake,
+          (Math.random() - 0.5) * 2 * shake,
+        );
+      }
 
       // 단계 전환
       if (stage === "glow" && el >= T_GLOW) stage = "wait";
@@ -167,6 +184,8 @@ export async function playCapture(inp: AnimInput): Promise<CaptureOutcome> {
       if (stage === "shake" && now - tShake >= T_SHAKE) {
         stage = "end";
         tEnd = now;
+        if (inp.escape) sfx.boing();
+        else sfx.chime();
       }
 
       // 배경: 흡수가 시작되기 전엔 사람이 있는 정지 프레임, 이후엔 지워진 장면
@@ -224,6 +243,11 @@ export async function playCapture(inp: AnimInput): Promise<CaptureOutcome> {
         const cycle = p * BALL_SHAKE_COUNT;
         const k = Math.floor(Math.min(cycle, BALL_SHAKE_COUNT - 1e-6));
         const within = cycle - k;
+        if (stage === "shake" && k !== lastK) {
+          lastK = k;
+          sfx.tick(1 + k * 0.18);
+          navigator.vibrate?.(10);
+        }
         // 한 번의 흔들림은 앞 75%에서 좌우로 흔들고 나머지는 멈춤
         angle =
           within < 0.75 ? Math.sin((within / 0.75) * Math.PI * 2) * 0.5 : 0;
@@ -232,6 +256,35 @@ export async function playCapture(inp: AnimInput): Promise<CaptureOutcome> {
       }
 
       drawBall(ballPoint.x, ballPoint.y, r, angle, glow);
+
+      // 충돌 직후의 충격파 고리와 불꽃
+      if (el < 520) {
+        const f = clamp01(el / 520);
+        ctx.save();
+        ctx.strokeStyle = `rgba(255,255,255,${0.9 * (1 - f)})`;
+        ctx.lineWidth = 5 * (1 - f) + 1;
+        ctx.beginPath();
+        ctx.arc(
+          ballPoint.x,
+          ballPoint.y,
+          14 + easeOut(f) * 110,
+          0,
+          Math.PI * 2,
+        );
+        ctx.stroke();
+        for (const sp of sparks) {
+          const d = easeOut(f) * sp.v * 520;
+          ctx.fillStyle = `rgba(153,246,228,${1 - f})`;
+          const sz = sp.size * (1 - f * 0.6);
+          ctx.fillRect(
+            ballPoint.x + Math.cos(sp.a) * d - sz / 2,
+            ballPoint.y + Math.sin(sp.a) * d - sz / 2,
+            sz,
+            sz,
+          );
+        }
+        ctx.restore();
+      }
 
       // 4) 결과 연출
       if (stage === "end") {

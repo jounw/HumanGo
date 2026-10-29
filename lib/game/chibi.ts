@@ -1,11 +1,12 @@
 // 얼굴 + 몸통 템플릿 -> 치비 캐릭터 (512x512 투명 PNG 용 캔버스)
 
-import { CHARACTER_SIZE } from "@/lib/constants";
+import { CHARACTER_SIZE, type Rarity } from "@/lib/constants";
 import { newCanvas } from "@/lib/vision/mask";
 import bodiesJson from "./bodies.json";
 
 export type BodyTemplate = {
   id: string;
+  rarity: Rarity; // 이 등급이 나왔을 때 쓰는 몸통 (고를 수 없다)
   name: string;
   file: string;
   headCenter: { x: number; y: number }; // 512 기준
@@ -13,6 +14,16 @@ export type BodyTemplate = {
 };
 
 export const BODIES = bodiesJson as BodyTemplate[];
+
+/**
+ * 등급에 맞는 몸통. 등급마다 여러 종류가 있고, seed(포획 id 에서 만든 값)로 하나가 정해진다.
+ * 같은 seed 면 항상 같은 몸통이라 사용자가 고를 수는 없다.
+ */
+export function bodyForRarity(r: Rarity, seed = 0): BodyTemplate {
+  const list = BODIES.filter((b) => b.rarity === r);
+  if (!list.length) return BODIES[0];
+  return list[seed % list.length];
+}
 
 const imageCache = new Map<string, Promise<HTMLImageElement>>();
 

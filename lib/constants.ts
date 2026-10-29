@@ -1,6 +1,6 @@
 // 게임 전역 설정값. 수치는 모두 여기서 조정한다.
 
-export const GAME_NAME = "휴먼GO";
+export const GAME_NAME = "HumanGo";
 export const BALL_NAME = "캡처볼";
 
 export const BUCKET = "captures";
@@ -26,7 +26,9 @@ export const HIT_BOX_EXPAND = 0.1; // 바운딩 박스 확장 비율
 
 // 포획 연출
 export const CAPTURE_DURATION_MS = 2500;
-export const ESCAPE_CHANCE = 0.1; // 0이면 탈출 없음
+// 탈출 확률: 무표정이면 ESCAPE_BASE, 아주 이상한 표정이면 ESCAPE_MAX (사이는 선형). 둘 다 0이면 탈출 없음
+export const ESCAPE_BASE = 0.1;
+export const ESCAPE_MAX = 0.75;
 export const BALL_SHAKE_COUNT = 3;
 export const MASK_DILATE_PX = 6; // 컷아웃용
 export const INPAINT_DILATE_PX = 14; // 배경 지우기용. 마스크 가장자리 잔상을 덮도록 더 크게
@@ -40,12 +42,16 @@ export const FACE_SIZE = 256;
 export const SCENE_MAX_WIDTH = 1280;
 export const SCENE_JPEG_QUALITY = 0.85;
 
-// 희귀도 (합이 1)
-export const RARITY_WEIGHTS = {
+// 희귀도: 표준정규분포 N(0,1) 에서 z 를 뽑아 |z| 가 어느 구간(σ)에 드는지로 정한다.
+// 값은 해당 등급의 상한(|z| < 상한). 마지막 등급은 상한이 없다.
+// 확률(%): 일반 45.2 / 고급 23.1 / 레어 18.4 / 에픽 8.8 / 전설 3.3 / 신화 1.2
+export const RARITY_SIGMA = {
   common: 0.6,
-  rare: 0.25,
-  epic: 0.12,
-  legendary: 0.03,
+  uncommon: 1.0,
+  rare: 1.5,
+  epic: 2.0,
+  legendary: 2.5,
+  mythic: Infinity,
 } as const;
 
-export type Rarity = keyof typeof RARITY_WEIGHTS;
+export type Rarity = keyof typeof RARITY_SIGMA;

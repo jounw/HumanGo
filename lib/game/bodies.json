@@ -1,6 +1,7 @@
 [
   {
     "id": "basic",
+    "rarity": "common",
     "name": "기본",
     "file": "/bodies/basic.svg",
     "headCenter": {
@@ -10,9 +11,21 @@
     "headSize": 320
   },
   {
-    "id": "suit",
-    "name": "정장",
-    "file": "/bodies/suit.svg",
+    "id": "pajama",
+    "rarity": "common",
+    "name": "잠옷",
+    "file": "/bodies/pajama.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "basic_green",
+    "rarity": "common",
+    "name": "초록 티",
+    "file": "/bodies/basic_green.svg",
     "headCenter": {
       "x": 256,
       "y": 196
@@ -21,6 +34,7 @@
   },
   {
     "id": "sport",
+    "rarity": "uncommon",
     "name": "운동복",
     "file": "/bodies/sport.svg",
     "headCenter": {
@@ -30,9 +44,10 @@
     "headSize": 320
   },
   {
-    "id": "hero",
-    "name": "히어로",
-    "file": "/bodies/hero.svg",
+    "id": "sport_red",
+    "rarity": "uncommon",
+    "name": "빨강 운동복",
+    "file": "/bodies/sport_red.svg",
     "headCenter": {
       "x": 256,
       "y": 196
@@ -41,6 +56,7 @@
   },
   {
     "id": "chef",
+    "rarity": "uncommon",
     "name": "요리사",
     "file": "/bodies/chef.svg",
     "headCenter": {
@@ -50,9 +66,131 @@
     "headSize": 320
   },
   {
-    "id": "pajama",
-    "name": "잠옷",
-    "file": "/bodies/pajama.svg",
+    "id": "suit",
+    "rarity": "rare",
+    "name": "정장",
+    "file": "/bodies/suit.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "suit_crimson",
+    "rarity": "rare",
+    "name": "붉은 정장",
+    "file": "/bodies/suit_crimson.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "suit_forest",
+    "rarity": "rare",
+    "name": "숲빛 정장",
+    "file": "/bodies/suit_forest.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "hero",
+    "rarity": "epic",
+    "name": "히어로",
+    "file": "/bodies/hero.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "hero_green",
+    "rarity": "epic",
+    "name": "초록 히어로",
+    "file": "/bodies/hero_green.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "hero_purple",
+    "rarity": "epic",
+    "name": "보라 히어로",
+    "file": "/bodies/hero_purple.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "knight",
+    "rarity": "legendary",
+    "name": "성기사",
+    "file": "/bodies/knight.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "knight_azure",
+    "rarity": "legendary",
+    "name": "푸른 기사",
+    "file": "/bodies/knight_azure.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "knight_shadow",
+    "rarity": "legendary",
+    "name": "그림자 기사",
+    "file": "/bodies/knight_shadow.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "celestial",
+    "rarity": "mythic",
+    "name": "천상의 존재",
+    "file": "/bodies/celestial.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "celestial_sun",
+    "rarity": "mythic",
+    "name": "태양의 사도",
+    "file": "/bodies/celestial_sun.svg",
+    "headCenter": {
+      "x": 256,
+      "y": 196
+    },
+    "headSize": 320
+  },
+  {
+    "id": "celestial_aurora",
+    "rarity": "mythic",
+    "name": "오로라의 사도",
+    "file": "/bodies/celestial_aurora.svg",
     "headCenter": {
       "x": 256,
       "y": 196

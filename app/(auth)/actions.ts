@@ -21,7 +21,7 @@ export async function login(
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: "이메일 또는 비밀번호가 맞지 않아요." };
 
-  redirect("/");
+  redirect("/home");
 }
 
 export async function signup(
@@ -67,7 +67,7 @@ export async function signup(
     };
   }
 
-  redirect("/");
+  redirect("/home");
 }
 
 export async function logout() {

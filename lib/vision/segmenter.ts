@@ -165,9 +165,26 @@ export class LiveSegmenter {
   }
 }
 
-export async function createLiveSegmenter() {
-  const { landmarker, delegate } = await createPose("VIDEO");
-  return new LiveSegmenter(landmarker, delegate);
+function makeLiveSegmenter() {
+  return createPose("VIDEO").then(
+    ({ landmarker, delegate }) => new LiveSegmenter(landmarker, delegate),
+  );
+}
+
+// 카메라 화면 전에 미리 만들어 둔 실시간 분할기 (한 번 꺼내 쓰면 비워진다)
+let livePool: Promise<LiveSegmenter> | null = null;
+
+/** 실시간 분할기를 미리 만들어 둔다. 카메라 화면이 열릴 때 createLiveSegmenter 가 이걸 가져다 쓴다. */
+export function warmLiveSegmenter() {
+  livePool ??= makeLiveSegmenter();
+  livePool.catch(() => (livePool = null));
+  return livePool.then(() => undefined);
+}
+
+export function createLiveSegmenter() {
+  const pooled = livePool;
+  livePool = null;
+  return pooled ?? makeLiveSegmenter();
 }
 
 let stillPromise: Promise<PoseLandmarker> | null = null;
