@@ -83,6 +83,9 @@ try {
   $new = @(Run "git" @("rev-parse", "origin/$branch"))[0].Trim()
   $cur = @(Run "git" @("rev-parse", "--abbrev-ref", "HEAD"))[0].Trim()
   if ($old -eq $new -and $cur -eq $branch) { return }
+  # a commit that already failed (build/migration/health) is not retried until a newer commit arrives
+  $failedFile = "$logs\deploy.failed"
+  if ((Test-Path $failedFile) -and ((Get-Content $failedFile -Raw).Trim() -eq $new)) { return }
 
   $dirty = Run "git" @("status", "--porcelain", "--untracked-files=no")
   if ($dirty) { Log "SKIP: working tree has local changes, not deploying"; return }
@@ -112,7 +115,8 @@ try {
     if ((Get-FileHash package-lock.json).Hash -ne $lockBefore) { Run "npm.cmd" @("ci") | Out-Null }
     Build
     StartApp
-    Log "ROLLED BACK to $($old.Substring(0,7))"
+    Set-Content $failedFile $new
+    Log "ROLLED BACK to $($old.Substring(0,7)); $($new.Substring(0,7)) will not be retried"
     return
   }
 
@@ -145,7 +149,8 @@ try {
       if ((Get-FileHash package-lock.json).Hash -ne $lockBefore) { Run "npm.cmd" @("ci") | Out-Null }
       Build
       StartApp
-      Log "ROLLED BACK to $($old.Substring(0,7))"
+      Set-Content $failedFile $new
+    Log "ROLLED BACK to $($old.Substring(0,7)); $($new.Substring(0,7)) will not be retried"
       return
     }
     [IO.File]::WriteAllText($tmp, "insert into public._app_migrations(name) values ('$($f.Name)');")
@@ -156,6 +161,7 @@ try {
   if ($changed -contains "scripts/gateway.mjs") { RestartGateway; Log "gateway restarted" }
   StartApp
   if (Healthy) {
+    Remove-Item $failedFile -Force -ErrorAction SilentlyContinue
     Log "DEPLOY OK $($new.Substring(0,7))"
   } else {
     Log "HEALTH CHECK FAILED, rolling back code"
@@ -164,7 +170,8 @@ try {
     if ((Get-FileHash package-lock.json).Hash -ne $lockBefore) { Run "npm.cmd" @("ci") | Out-Null }
     Build
     StartApp
-    Log "ROLLED BACK to $($old.Substring(0,7)) (migrations, if any, stay applied)"
+    Set-Content $failedFile $new
+    Log "ROLLED BACK to $($old.Substring(0,7)) (migrations, if any, stay applied); $($new.Substring(0,7)) will not be retried"
   }
 } catch {
   Log "ERROR: $($_.Exception.Message)"
