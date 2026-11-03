@@ -79,9 +79,9 @@ function Build {
 try {
   Set-Location $root
   Run "git" @("fetch", "-q", "origin", $branch) | Out-Null
-  $old = (Run "git" @("rev-parse", "HEAD"))[0].Trim()
-  $new = (Run "git" @("rev-parse", "origin/$branch"))[0].Trim()
-  $cur = (Run "git" @("rev-parse", "--abbrev-ref", "HEAD"))[0].Trim()
+  $old = @(Run "git" @("rev-parse", "HEAD"))[0].Trim()
+  $new = @(Run "git" @("rev-parse", "origin/$branch"))[0].Trim()
+  $cur = @(Run "git" @("rev-parse", "--abbrev-ref", "HEAD"))[0].Trim()
   if ($old -eq $new -and $cur -eq $branch) { return }
 
   $dirty = Run "git" @("status", "--porcelain", "--untracked-files=no")
