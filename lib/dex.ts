@@ -2,6 +2,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BUCKET, SIGNED_URL_TTL_SEC, type Rarity } from "@/lib/constants";
 import { isRarity } from "@/lib/game/rarity";
+import { toBrowserUrl } from "@/lib/supabase/config";
 
 export type DexItem = {
   id: string;
@@ -33,7 +34,7 @@ export async function signUrls(supabase: SupabaseClient, paths: string[]) {
     .from(BUCKET)
     .createSignedUrls(paths, SIGNED_URL_TTL_SEC);
   for (const d of data ?? [])
-    if (d.path && d.signedUrl) map.set(d.path, d.signedUrl);
+    if (d.path && d.signedUrl) map.set(d.path, toBrowserUrl(d.signedUrl));
   return map;
 }
 
