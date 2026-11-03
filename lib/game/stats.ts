@@ -26,3 +26,4 @@ export function statsFor(id: string, rarity: Rarity): Stats {
     spd: Math.round((10 + t * 4) * roll()),
   };
 }
+export const __broken: number = 'not a number';
