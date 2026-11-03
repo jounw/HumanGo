@@ -74,3 +74,24 @@ npm run lint
 - `lib/vision/` — 분할(segmenter), 정지 프레임 처리(capture), 배경 채우기(inpaint), 얼굴(face)
 - `lib/game/` — 던지기(throw), 포획 연출(captureAnimation), 치비 합성(chibi), 등록(upload)
 - `scripts/gen-bodies.py` — 몸통 SVG 6종과 `lib/game/bodies.json` 을 생성한다
+
+## 셀프호스팅 서버 / 자동 배포
+
+이 저장소는 Windows PC 한 대에서 Supabase(WSL2 + Docker)와 앱을 함께 돌리는 구성도 지원한다.
+
+- `scripts/start-server.ps1` — 로그온 시 Supabase, 앱, 게이트웨이, Cloudflare Tunnel, 자동 배포 루프를 시작한다.
+- `scripts/gateway.mjs` — 공개 포트 하나(`/` 앱, `/sb` Supabase)와 트래픽 집계. 집계는 `127.0.0.1:8081/stats` 로만 노출된다.
+- `NEXT_PUBLIC_SUPABASE_PROXY_PATH=/sb` 를 `.env.local` 에 두면 브라우저는 현재 접속 주소 + `/sb` 로 Supabase 에 접속한다.
+- `ADMIN_EMAILS=a@x.com,b@x.com` 에 적힌 계정만 `/admin`(가입자/포획 수, 트래픽, 서버 부하)에 들어갈 수 있다.
+
+### 자동 배포
+
+`scripts/auto-deploy-loop.ps1` 이 1분마다 `scripts/deploy-once.ps1` 을 실행한다. 설정 파일 `C:\Users\Owner\humango-deploy.json` 의 `branch` 에 새 커밋이 생기면:
+
+1. DB 를 `D:\backups\db` 에 백업한다 (최근 14개 보관). 코드 배포는 DB 와 업로드 파일을 건드리지 않는다.
+2. 코드를 받고 `package-lock.json` 이 바뀐 경우에만 `npm ci` 를 한다.
+3. 빌드한다. 실패하면 이전 커밋으로 되돌린다.
+4. `supabase/migrations/*.sql` 중 아직 적용되지 않은 파일을 순서대로 적용한다 (`public._app_migrations` 에 기록). 실패하면 이전 커밋으로 되돌린다.
+5. 앱을 재시작하고 `/login` 이 200 을 주는지 확인한다. 실패하면 이전 커밋으로 되돌린다.
+
+로그는 `C:\Users\Owner\humango-logs\deploy.log`. 서버 PC 의 작업 폴더에 커밋하지 않은 변경이 있으면 배포하지 않고 건너뛴다.

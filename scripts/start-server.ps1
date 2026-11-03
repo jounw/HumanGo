@@ -31,3 +31,6 @@ if (Test-Path $tokenFile) {
     -ArgumentList "tunnel","--no-autoupdate","--url","http://127.0.0.1:8080" `
     -RedirectStandardOutput "$logs\tunnel.log" -RedirectStandardError "$logs\tunnel.err.log"
 }
+
+# 5) auto deploy: every minute, pull new commits of the branch in C:\Users\Owner\humango-deploy.json
+Start-Process -WindowStyle Hidden -FilePath powershell -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',(Join-Path $PSScriptRoot 'auto-deploy-loop.ps1')
