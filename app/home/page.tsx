@@ -77,6 +77,23 @@ export default async function HomePage() {
         <span className="text-white/60">{count ?? 0}명 잡음 ›</span>
       </Link>
 
+      <div className="grid grid-cols-2 gap-3">
+        <Link
+          href="/friends"
+          className="flex items-center justify-between rounded-2xl bg-white/10 px-5 py-4 ring-1 ring-white/10 active:bg-white/15"
+        >
+          <span className="font-semibold">친구</span>
+          <span className="text-white/60">→</span>
+        </Link>
+        <Link
+          href="/battle"
+          className="flex items-center justify-between rounded-2xl bg-amber-300 px-5 py-4 text-black active:scale-[0.98]"
+        >
+          <span className="font-bold">배틀 ⚔</span>
+          <span className="opacity-70">→</span>
+        </Link>
+      </div>
+
       {recent.length > 0 && (
         <section className="flex flex-col gap-3">
           <h2 className="font-semibold">최근 잡은 친구</h2>
