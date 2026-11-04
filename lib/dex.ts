@@ -11,6 +11,7 @@ export type DexItem = {
   capturedAt: string;
   ownerId: string;
   ownerNickname: string;
+  isPrivate?: boolean;
   characterUrl: string | null;
 };
 
@@ -21,11 +22,12 @@ type Row = {
   character_path: string;
   captured_at: string;
   owner_id: string;
+  is_private: boolean;
   owner: { nickname: string } | { nickname: string }[] | null;
 };
 
 const COLUMNS =
-  "id,name,rarity,character_path,captured_at,owner_id,owner:profiles(nickname)";
+  "id,name,rarity,character_path,captured_at,owner_id,is_private,owner:profiles(nickname)";
 
 export async function signUrls(supabase: SupabaseClient, paths: string[]) {
   const map = new Map<string, string>();
@@ -68,6 +70,7 @@ export async function listCaptures(
     capturedAt: r.captured_at,
     ownerId: r.owner_id,
     ownerNickname: nickname(r.owner),
+    isPrivate: r.is_private,
     characterUrl: urls.get(r.character_path) ?? null,
   }));
 }

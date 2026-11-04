@@ -45,6 +45,7 @@ function ResultBody({
     "working",
   );
   const [name, setName] = useState("");
+  const [isPrivate, setIsPrivate] = useState(false); // 기본은 전체 공개
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const previewRef = useRef<HTMLCanvasElement>(null);
@@ -120,6 +121,7 @@ function ResultBody({
       )({
         id: captureId,
         name,
+        isPrivate,
         bodyId: body.id,
         rarity,
         character: shown,
@@ -190,7 +192,6 @@ function ResultBody({
         </p>
       )}
 
-
       {ready && !faceFound && (
         <p
           role="status"
@@ -217,6 +218,20 @@ function ResultBody({
             required
             className="w-full rounded-xl bg-white/10 px-4 py-3 text-base text-white ring-1 ring-white/10 outline-none placeholder:text-white/40 focus:ring-2 focus:ring-emerald-400"
           />
+        </label>
+        <label className="flex min-h-11 items-center gap-3 rounded-xl bg-white/5 px-4 text-sm text-white/80">
+          <input
+            type="checkbox"
+            checked={isPrivate}
+            onChange={(e) => setIsPrivate(e.target.checked)}
+            className="size-4 accent-emerald-400"
+          />
+          <span className="flex flex-col">
+            <span>나만 보기</span>
+            <span className="text-xs text-white/50">
+              끄면 다른 사람도 전체 도감에서 볼 수 있어요
+            </span>
+          </span>
         </label>
         {error && (
           <p role="alert" className="text-sm text-rose-300">

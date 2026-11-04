@@ -30,6 +30,14 @@ export default function CharacterCard({
             이미지 없음
           </div>
         )}
+        {item.isPrivate && (
+          <span
+            title="나만 보기"
+            className="absolute top-0 right-0 rounded-full bg-black/60 px-2 py-0.5 text-[11px]"
+          >
+            🔒
+          </span>
+        )}
         <span
           className={`absolute top-0 left-0 rounded-full px-2 py-0.5 text-[11px] font-bold ${style.badge}`}
         >

@@ -32,8 +32,6 @@ export async function POST() {
   }
 
   const decision = decideRoll(recent ?? [], now);
-  if (decision.action === "limit")
-    return fail(429, "너무 자주 잡았어요. 잠시 뒤에 다시 시도해 주세요.");
   if (decision.action === "reuse")
     return NextResponse.json({
       id: decision.roll.id,

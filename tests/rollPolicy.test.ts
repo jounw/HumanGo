@@ -1,7 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import {
-  HOURLY_ROLL_LIMIT,
   decideRoll,
   secureRng,
   type RollRow,
@@ -30,11 +29,11 @@ test("20초가 지났거나 이미 등록에 쓴 뽑기면 새로 뽑을 수 있
   assert.deepEqual(decideRoll([roll(5, true)], NOW), { action: "new" });
 });
 
-test("1시간에 30번을 넘기면 막는다", () => {
-  const many = Array.from({ length: HOURLY_ROLL_LIMIT }, (_, i) =>
+test("많이 잡아도 횟수 제한 없이 계속 새로 뽑는다", () => {
+  const many = Array.from({ length: 500 }, (_, i) =>
     roll(100 + i, true, `r${i}`),
   );
-  assert.deepEqual(decideRoll(many, NOW), { action: "limit" });
+  assert.deepEqual(decideRoll(many, NOW), { action: "new" });
 });
 
 test("서버 난수로 뽑아도 등급 분포가 정규분포 구간 확률과 비슷하다", () => {

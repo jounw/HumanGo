@@ -15,6 +15,7 @@ import { newCanvas } from "@/lib/vision/mask";
 export type RegisterInput = {
   id: string; // 능력치/스킬이 이 id 로 정해지므로 등록 전에 미리 정해 둔다
   name: string;
+  isPrivate?: boolean; // true 면 나만 볼 수 있다 (기본 전체 공개)
   bodyId: string;
   rarity: Rarity;
   character: HTMLCanvasElement;
@@ -105,6 +106,7 @@ export async function registerCapture(
       cutout_path: paths.cutout,
       body_template: input.bodyId,
       rarity: input.rarity,
+      is_private: input.isPrivate ?? false,
     });
     if (error) throw error;
     return id;
