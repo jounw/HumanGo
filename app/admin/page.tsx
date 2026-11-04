@@ -18,6 +18,12 @@ export default async function AdminPage() {
           ←
         </Link>
         <h1 className="text-2xl font-black">관리자</h1>
+        <Link
+          href="/admin/photos"
+          className="ml-auto min-h-11 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-semibold"
+        >
+          사진 관리
+        </Link>
       </header>
       <AdminDashboard />
     </main>

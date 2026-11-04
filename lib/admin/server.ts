@@ -26,6 +26,27 @@ export async function requireAdmin() {
   return admin ? { user, admin } : null;
 }
 
+// ---- 배포 정보 ---------------------------------------------------------
+/** 지금 돌고 있는 빌드의 커밋과, DB 에 적용된 마이그레이션 목록 */
+export async function deployInfo(admin: SupabaseClient) {
+  const { data, error } = await admin
+    .from("_app_migrations")
+    .select("name,applied_at")
+    .order("name", { ascending: true });
+  return {
+    sha: process.env.BUILD_SHA ?? "unknown",
+    subject: process.env.BUILD_SUBJECT ?? "",
+    builtAt: process.env.BUILD_TIME ?? null,
+    // 자동 배포 전용 테이블이라 없으면(수동 설치 등) null
+    migrations: error
+      ? null
+      : (data ?? []).map((m) => ({
+          name: m.name as string,
+          appliedAt: m.applied_at as string,
+        })),
+  };
+}
+
 // ---- DB 지표 ----------------------------------------------------------
 const DAYS = 14;
 const kstDay = (t: number) =>

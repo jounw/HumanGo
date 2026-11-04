@@ -16,6 +16,12 @@ type Point = {
 };
 type Stats = {
   at: number;
+  deploy: {
+    sha: string;
+    subject: string;
+    builtAt: string | null;
+    migrations: { name: string; appliedAt: string }[] | null;
+  };
   db: {
     users: number;
     users24h: number;
@@ -220,7 +226,7 @@ export default function AdminDashboard() {
       </p>
     );
 
-  const { db, host, traffic } = s;
+  const { db, host, traffic, deploy } = s;
   const memUsed = host.mem.total - host.mem.free;
   const series = traffic?.[range] ?? [];
   const label = range === "minutes" ? hhmm : hour;
@@ -235,6 +241,39 @@ export default function AdminDashboard() {
         {new Date(s.at).toLocaleTimeString("ko-KR")} 기준 · 5초마다 자동 갱신
         {err && <span className="ml-2 text-rose-300">(갱신 실패: {err})</span>}
       </p>
+
+      <Section title="배포 상태">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div className="rounded-2xl bg-white/5 p-4">
+            <p className="text-xs text-white/55">지금 돌고 있는 빌드</p>
+            <p className="font-mono text-2xl font-black">
+              {deploy.sha === "unknown" ? "unknown" : deploy.sha.slice(0, 7)}
+            </p>
+            <p className="mt-1 truncate text-sm text-white/70">
+              {deploy.subject}
+            </p>
+            {deploy.builtAt && (
+              <p className="mt-1 text-xs text-white/50">
+                빌드 {new Date(deploy.builtAt).toLocaleString("ko-KR")}
+              </p>
+            )}
+          </div>
+          <div className="rounded-2xl bg-white/5 p-4">
+            <p className="text-xs text-white/55">적용된 마이그레이션</p>
+            {deploy.migrations ? (
+              <ul className="mt-1 flex max-h-32 flex-col gap-0.5 overflow-y-auto font-mono text-xs text-white/70">
+                {[...deploy.migrations].reverse().map((m) => (
+                  <li key={m.name}>{m.name}</li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-1 text-sm text-white/50">
+                기록 테이블이 없어요
+              </p>
+            )}
+          </div>
+        </div>
+      </Section>
 
       <Section title="서비스 현황">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
