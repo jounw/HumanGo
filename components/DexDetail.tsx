@@ -13,6 +13,7 @@ type Props = {
   rarity: Rarity;
   ownerNickname: string;
   isMine: boolean;
+  isPrivate?: boolean;
   capturedAt: string;
   characterUrl: string | null;
   sceneUrl: string | null;
@@ -25,6 +26,7 @@ export default function DexDetail(p: Props) {
   const [name, setName] = useState(p.name);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(p.name);
+  const [isPrivate, setIsPrivate] = useState(p.isPrivate ?? false);
   const [original, setOriginal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -51,6 +53,20 @@ export default function DexDetail(p: Props) {
     if (error) return setError("이름을 바꾸지 못했어요.");
     setName(next);
     setEditing(false);
+    router.refresh();
+  }
+
+  async function togglePrivate() {
+    const next = !isPrivate;
+    setBusy(true);
+    setError(null);
+    const { error } = await createClient()
+      .from("captures")
+      .update({ is_private: next })
+      .eq("id", p.id);
+    setBusy(false);
+    if (error) return setError("공개 설정을 바꾸지 못했어요.");
+    setIsPrivate(next);
     router.refresh();
   }
 
@@ -156,8 +172,18 @@ export default function DexDetail(p: Props) {
         <p className="text-sm text-white/60">
           {p.ownerNickname}님이 잡음 · {p.capturedAt}
         </p>
+        {p.isMine && !DEMO && (
+          <button
+            onClick={togglePrivate}
+            disabled={busy}
+            className="mt-1 min-h-11 self-start rounded-lg bg-white/10 px-3 text-sm text-white/80 disabled:opacity-50"
+          >
+            {isPrivate
+              ? "🔒 나만 보기 (눌러서 공개)"
+              : "🌐 전체 공개 (눌러서 나만 보기)"}
+          </button>
+        )}
       </section>
-
 
       {canOriginal && (
         <section className="flex flex-col gap-3">

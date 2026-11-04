@@ -22,7 +22,7 @@ export default async function DexDetailPage(props: PageProps<"/dex/[id]">) {
   const { data: row } = await supabase
     .from("captures")
     .select(
-      "id,name,rarity,character_path,face_path,scene_path,cutout_path,captured_at,owner_id,owner:profiles(nickname)",
+      "id,name,rarity,character_path,face_path,scene_path,cutout_path,captured_at,owner_id,is_private,owner:profiles(nickname)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -55,6 +55,7 @@ export default async function DexDetailPage(props: PageProps<"/dex/[id]">) {
         rarity={isRarity(row.rarity) ? row.rarity : "common"}
         ownerNickname={owner?.nickname ?? "알 수 없음"}
         isMine={user?.id === row.owner_id}
+        isPrivate={row.is_private}
         // 서버 시간대와 무관하게 같은 문자열이 나오도록 서버에서 포맷
         capturedAt={new Intl.DateTimeFormat("ko-KR", {
           dateStyle: "long",

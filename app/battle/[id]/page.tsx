@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import BattleRoom, { type RoomBattle } from "@/components/BattleRoom";
 import { UUID } from "@/lib/battle/server";
 import { listCaptures, signUrls } from "@/lib/dex";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function BattlePage(props: PageProps<"/battle/[id]">) {
@@ -24,6 +25,12 @@ export default async function BattlePage(props: PageProps<"/battle/[id]">) {
     .maybeSingle();
   if (!b) notFound();
 
+  const mySide =
+    b.challenger_id === user.id ? 0 : b.opponent_id === user.id ? 1 : -1;
+  if (mySide === -1) notFound();
+
+  // 나만 보기 캐릭터도 이 배틀의 참가자에게는 보여야 하므로 (참가자 확인 후) 팀 이미지는 admin 으로 읽는다.
+  const reader = createAdminClient() ?? supabase;
   const teamIds = [...(b.challenger_team ?? []), ...(b.opponent_team ?? [])];
   const [{ data: profiles }, { data: caps }] = await Promise.all([
     supabase
@@ -31,14 +38,14 @@ export default async function BattlePage(props: PageProps<"/battle/[id]">) {
       .select("id,nickname")
       .in("id", [b.challenger_id, b.opponent_id]),
     teamIds.length
-      ? supabase.from("captures").select("id,character_path").in("id", teamIds)
+      ? reader.from("captures").select("id,character_path").in("id", teamIds)
       : Promise.resolve({ data: [] }),
   ]);
   const nick = (uid: string) =>
     profiles?.find((p) => p.id === uid)?.nickname ?? "알 수 없음";
 
   const urls = await signUrls(
-    supabase,
+    reader,
     (caps ?? []).map((c) => c.character_path),
   );
   const images: Record<string, string> = {};
@@ -47,8 +54,6 @@ export default async function BattlePage(props: PageProps<"/battle/[id]">) {
     if (u) images[c.id] = u;
   }
 
-  const mySide = b.challenger_id === user.id ? 0 : b.opponent_id === user.id ? 1 : -1;
-  if (mySide === -1) notFound();
   const needsPick = b.status === "pending" && mySide === 1;
   const myItems = needsPick
     ? await listCaptures(supabase, { ownerId: user.id })
